@@ -1,0 +1,4 @@
+# LightGCN 运行所需的核心依赖。
+# PyTorch 请根据本机 CPU/CUDA 环境选择官方安装命令；这里保留版本下限。
+torch>=1.7
+recbole>=1.2.1,<1.3

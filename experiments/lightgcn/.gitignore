@@ -1,0 +1,9 @@
+# 数据集和模型文件体积较大，不纳入代码提交。
+data/*
+!data/.gitkeep
+outputs/checkpoints/*
+!outputs/checkpoints/.gitkeep
+outputs/logs/*
+!outputs/logs/.gitkeep
+outputs/results/*
+!outputs/results/.gitkeep
