@@ -1,3 +1,0 @@
-# SASRec 与 LightGCN 共用相同的 PyTorch/RecBole 依赖。
-torch>=1.7
-recbole>=1.2.1,<1.3

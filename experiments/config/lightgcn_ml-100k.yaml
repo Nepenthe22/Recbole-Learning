@@ -1,0 +1,38 @@
+# LightGCN 协同过滤实验配置。
+USER_ID_FIELD: user_id
+ITEM_ID_FIELD: item_id
+TIME_FIELD: timestamp
+field_separator: "\t"
+load_col:
+  inter: [user_id, item_id, rating, timestamp]
+
+epochs: 10
+train_batch_size: 2048
+learner: adam
+learning_rate: 0.001
+embedding_size: 64
+n_layers: 3
+reg_weight: 0.00001
+loss_type: BPR
+train_neg_sample_args:
+  distribution: uniform
+  sample_num: 1
+
+eval_args:
+  split: {RS: [8, 1, 1]}
+  group_by: user
+  order: RO
+  mode: full
+metrics: [Recall, Hit, NDCG, MRR]
+topk: [10, 20]
+valid_metric: NDCG@10
+eval_batch_size: 4096
+stopping_step: 3
+
+gpu_id: 0
+seed: 2026
+reproducibility: true
+show_progress: true
+save_dataset: false
+save_dataloaders: false
+log_wandb: false
