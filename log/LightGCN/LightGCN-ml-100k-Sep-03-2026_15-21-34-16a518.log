@@ -1,0 +1,156 @@
+Thu 03 Sep 2026 15:21:34 INFO  ['experiments/code/run_experiment.py']
+Thu 03 Sep 2026 15:21:34 INFO  
+General Hyper Parameters:
+gpu_id = 0
+use_gpu = True
+seed = 2026
+state = INFO
+reproducibility = True
+data_path = /root/miniconda3/lib/python3.10/site-packages/recbole/config/../dataset_example/ml-100k
+checkpoint_dir = /root/autodl-tmp/Recbole-Learning/experiments/outputs/checkpoints
+show_progress = True
+save_dataset = False
+dataset_save_path = None
+save_dataloaders = False
+dataloaders_save_path = None
+log_wandb = False
+
+Training Hyper Parameters:
+epochs = 10
+train_batch_size = 2048
+learner = adam
+learning_rate = 0.001
+train_neg_sample_args = {'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}
+eval_step = 1
+stopping_step = 3
+clip_grad_norm = None
+weight_decay = 0.0
+loss_decimal_place = 4
+
+Evaluation Hyper Parameters:
+eval_args = {'split': {'RS': [8, 1, 1]}, 'order': 'RO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}
+repeatable = False
+metrics = ['Recall', 'Hit', 'NDCG', 'MRR']
+topk = [10, 20]
+valid_metric = NDCG@10
+valid_metric_bigger = True
+eval_batch_size = 4096
+metric_decimal_place = 4
+
+Dataset Hyper Parameters:
+field_separator = 	
+seq_separator =  
+USER_ID_FIELD = user_id
+ITEM_ID_FIELD = item_id
+RATING_FIELD = rating
+TIME_FIELD = timestamp
+seq_len = None
+LABEL_FIELD = label
+threshold = None
+NEG_PREFIX = neg_
+load_col = {'inter': ['user_id', 'item_id', 'rating', 'timestamp']}
+unload_col = None
+unused_col = None
+additional_feat_suffix = None
+rm_dup_inter = None
+val_interval = None
+filter_inter_by_user_or_item = True
+user_inter_num_interval = None
+item_inter_num_interval = None
+alias_of_user_id = None
+alias_of_item_id = None
+alias_of_entity_id = None
+alias_of_relation_id = None
+preload_weight = None
+normalize_field = None
+normalize_all = True
+ITEM_LIST_LENGTH_FIELD = item_length
+LIST_SUFFIX = _list
+MAX_ITEM_LIST_LENGTH = 50
+POSITION_FIELD = position_id
+HEAD_ENTITY_ID_FIELD = head_id
+TAIL_ENTITY_ID_FIELD = tail_id
+RELATION_ID_FIELD = relation_id
+ENTITY_ID_FIELD = entity_id
+kg_reverse_r = False
+entity_kg_num_interval = None
+relation_kg_num_interval = None
+benchmark_filename = None
+
+Other Hyper Parameters: 
+worker = 0
+wandb_project = recbole
+shuffle = True
+require_pow = False
+enable_amp = False
+enable_scaler = False
+transform = None
+embedding_size = 64
+n_layers = 3
+reg_weight = 1e-05
+numerical_features = []
+discretization = None
+MODEL_TYPE = ModelType.GENERAL
+loss_type = BPR
+MODEL_INPUT_TYPE = InputType.PAIRWISE
+eval_type = EvaluatorType.RANKING
+single_spec = True
+local_rank = 0
+device = cuda
+valid_neg_sample_args = {'distribution': 'uniform', 'sample_num': 'none'}
+test_neg_sample_args = {'distribution': 'uniform', 'sample_num': 'none'}
+
+
+Thu 03 Sep 2026 15:21:35 INFO  ml-100k
+The number of users: 944
+Average actions of users: 106.04453870625663
+The number of items: 1683
+Average actions of items: 59.45303210463734
+The number of inters: 100000
+The sparsity of the dataset: 93.70575143257098%
+Remain Fields: ['user_id', 'item_id', 'rating', 'timestamp']
+Thu 03 Sep 2026 15:21:35 INFO  [Training]: train_batch_size = [2048] train_neg_sample_args: [{'distribution': 'uniform', 'sample_num': 1, 'alpha': 1.0, 'dynamic': False, 'candidate_num': 0}]
+Thu 03 Sep 2026 15:21:35 INFO  [Evaluation]: eval_batch_size = [4096] eval_args: [{'split': {'RS': [8, 1, 1]}, 'order': 'RO', 'group_by': 'user', 'mode': {'valid': 'full', 'test': 'full'}}]
+Thu 03 Sep 2026 15:21:36 INFO  LightGCN(
+  (user_embedding): Embedding(944, 64)
+  (item_embedding): Embedding(1683, 64)
+  (mf_loss): BPRLoss()
+  (reg_loss): EmbLoss()
+)
+Trainable parameters: 168128
+Thu 03 Sep 2026 15:21:36 INFO  FLOPs: 0.0
+Thu 03 Sep 2026 15:21:36 INFO  epoch 0 training [time: 0.60s, train loss: 27.4867]
+Thu 03 Sep 2026 15:21:37 INFO  epoch 0 evaluating [time: 0.53s, valid_score: 0.121200]
+Thu 03 Sep 2026 15:21:37 INFO  valid result: 
+recall@10 : 0.1169    recall@20 : 0.183    hit@10 : 0.562    hit@20 : 0.7052    ndcg@10 : 0.1212    ndcg@20 : 0.1387    mrr@10 : 0.2213    mrr@20 : 0.2312
+Thu 03 Sep 2026 15:21:37 INFO  Saving current: /root/autodl-tmp/Recbole-Learning/experiments/outputs/checkpoints/LightGCN-Sep-03-2026_15-21-36.pth
+Thu 03 Sep 2026 15:21:38 INFO  epoch 1 training [time: 0.61s, train loss: 24.8250]
+Thu 03 Sep 2026 15:21:38 INFO  epoch 1 evaluating [time: 0.48s, valid_score: 0.119400]
+Thu 03 Sep 2026 15:21:38 INFO  valid result: 
+recall@10 : 0.1169    recall@20 : 0.1818    hit@10 : 0.5557    hit@20 : 0.7063    ndcg@10 : 0.1194    ndcg@20 : 0.1371    mrr@10 : 0.2195    mrr@20 : 0.23
+Thu 03 Sep 2026 15:21:39 INFO  epoch 2 training [time: 0.50s, train loss: 19.8353]
+Thu 03 Sep 2026 15:21:39 INFO  epoch 2 evaluating [time: 0.48s, valid_score: 0.118100]
+Thu 03 Sep 2026 15:21:39 INFO  valid result: 
+recall@10 : 0.1158    recall@20 : 0.183    hit@10 : 0.5483    hit@20 : 0.7094    ndcg@10 : 0.1181    ndcg@20 : 0.1368    mrr@10 : 0.2176    mrr@20 : 0.2288
+Thu 03 Sep 2026 15:21:40 INFO  epoch 3 training [time: 0.49s, train loss: 16.3605]
+Thu 03 Sep 2026 15:21:40 INFO  epoch 3 evaluating [time: 0.48s, valid_score: 0.118300]
+Thu 03 Sep 2026 15:21:40 INFO  valid result: 
+recall@10 : 0.1161    recall@20 : 0.1819    hit@10 : 0.5525    hit@20 : 0.7063    ndcg@10 : 0.1183    ndcg@20 : 0.1363    mrr@10 : 0.2181    mrr@20 : 0.2287
+Thu 03 Sep 2026 15:21:41 INFO  epoch 4 training [time: 0.50s, train loss: 15.0482]
+Thu 03 Sep 2026 15:21:41 INFO  epoch 4 evaluating [time: 0.48s, valid_score: 0.118200]
+Thu 03 Sep 2026 15:21:41 INFO  valid result: 
+recall@10 : 0.114    recall@20 : 0.18    hit@10 : 0.5493    hit@20 : 0.6946    ndcg@10 : 0.1182    ndcg@20 : 0.1362    mrr@10 : 0.2185    mrr@20 : 0.2287
+Thu 03 Sep 2026 15:21:41 INFO  Finished training, best eval result in epoch 0
+Thu 03 Sep 2026 15:21:41 INFO  Loading model structure and parameters from /root/autodl-tmp/Recbole-Learning/experiments/outputs/checkpoints/LightGCN-Sep-03-2026_15-21-36.pth
+Thu 03 Sep 2026 15:21:43 INFO  The running environment of this training is as follows:
++-------------+-----------------+
+| Environment |      Usage      |
++=============+=================+
+| CPU         |     6.30 %      |
++-------------+-----------------+
+| GPU         | 0.05 G/11.63 G  |
++-------------+-----------------+
+| Memory      | 0.97 G/251.54 G |
++-------------+-----------------+
+Thu 03 Sep 2026 15:21:43 INFO  best valid : OrderedDict([('recall@10', 0.1169), ('recall@20', 0.183), ('hit@10', 0.562), ('hit@20', 0.7052), ('ndcg@10', 0.1212), ('ndcg@20', 0.1387), ('mrr@10', 0.2213), ('mrr@20', 0.2312)])
+Thu 03 Sep 2026 15:21:43 INFO  test result: OrderedDict([('recall@10', 0.1315), ('recall@20', 0.191), ('hit@10', 0.5875), ('hit@20', 0.6967), ('ndcg@10', 0.1439), ('ndcg@20', 0.1565), ('mrr@10', 0.2672), ('mrr@20', 0.2746)])
