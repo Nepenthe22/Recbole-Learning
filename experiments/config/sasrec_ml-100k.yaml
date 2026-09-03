@@ -22,10 +22,10 @@ layer_norm_eps: 0.000000000001
 initializer_range: 0.02
 loss_type: CE
 train_neg_sample_args: ~
-epochs: 10
+epochs: 50
 train_batch_size: 2048
 learner: adam
-learning_rate: 0.001
+learning_rate: 0.0005
 
 eval_args:
   split: {LS: valid_and_test}

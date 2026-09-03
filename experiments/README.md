@@ -43,6 +43,11 @@ python experiments/code/run_experiment.py --model SASRec --gpu-id 0
 ## 模型选择
 
 ```bash
-python experiments/code/run_experiment.py --model LightGCN --epochs 20
-python experiments/code/run_experiment.py --model SASRec --epochs 20
+cd /root/autodl-tmp/Recbole-Learning
+
+```
+
+```bash
+python experiments/code/run_experiment.py --model LightGCN --gpu-id 0
+python experiments/code/run_experiment.py --model SASRec --gpu-id 0
 ```
