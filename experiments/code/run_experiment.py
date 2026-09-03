@@ -16,7 +16,6 @@ from typing import Any, TextIO
 
 
 EXPERIMENTS_DIR = Path(__file__).resolve().parent.parent
-DEFAULT_DATA_PATH = EXPERIMENTS_DIR / "data"
 DEFAULT_OUTPUT_DIR = EXPERIMENTS_DIR / "outputs"
 CONFIG_DIR = EXPERIMENTS_DIR / "config"
 
@@ -47,7 +46,12 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--model", choices=["LightGCN", "SASRec"], required=True)
     parser.add_argument("--dataset", default="ml-100k")
     parser.add_argument("--config", type=Path, help="可选的自定义 YAML 配置")
-    parser.add_argument("--data-path", type=Path, default=DEFAULT_DATA_PATH)
+    parser.add_argument(
+        "--data-path",
+        type=Path,
+        default=None,
+        help="可选：自定义数据集的父目录；ml-100k 默认使用 RecBole 内置数据集",
+    )
     parser.add_argument("--output-dir", type=Path, default=DEFAULT_OUTPUT_DIR)
     parser.add_argument("--epochs", type=int, help="覆盖配置文件中的 epoch")
     parser.add_argument("--seed", type=int, help="覆盖配置文件中的随机种子")
@@ -94,17 +98,40 @@ def to_jsonable(value: Any) -> Any:
     return value
 
 
+def summarize_result(result: Any) -> dict[str, Any]:
+    """只归档 RecBole 返回值中的可复现实验结果。
+
+    ``run_recbole`` 通常返回
+    ``(config, dataset, train_data, valid_data, test_data,
+    best_valid_score, test_result)``。前五项包含大量不可 JSON 序列化的
+    运行时对象，不能直接写入结果文件。
+    """
+    if isinstance(result, tuple) and len(result) >= 2:
+        return {
+            "best_valid_score": to_jsonable(result[-2]),
+            "test_result": to_jsonable(result[-1]),
+        }
+    if isinstance(result, dict):
+        return {str(key): to_jsonable(value) for key, value in result.items()}
+    return {"value": to_jsonable(result)}
+
+
 def main() -> int:
     """统一实验入口。"""
     args = parse_args()
     config_file = (args.config or CONFIG_DIR / f"{args.model.lower()}_{args.dataset}.yaml").resolve()
-    data_path = args.data_path.resolve()
+    # 未传入 --data-path 时，ml-100k 由 RecBole 从包内示例数据读取。
+    # 只有运行自定义数据集时才将 data_path 覆盖到 RecBole 配置中。
+    data_path = args.data_path.resolve() if args.data_path else None
     output_dir = args.output_dir.resolve()
-    dataset_dir = data_path / args.dataset
     if not config_file.is_file():
         raise FileNotFoundError(f"找不到配置文件: {config_file}")
-    if not dataset_dir.is_dir():
-        raise FileNotFoundError(f"找不到数据目录: {dataset_dir}，请先准备数据。")
+    if data_path is None and args.dataset != "ml-100k":
+        raise ValueError("除 RecBole 内置的 ml-100k 外，其他数据集必须提供 --data-path。")
+    if data_path is not None and not (data_path / args.dataset).is_dir():
+        raise FileNotFoundError(
+            f"找不到数据目录: {data_path / args.dataset}，请检查 --data-path。"
+        )
 
     gpu_name = validate_cuda(args.gpu_id)
     checkpoint_dir = output_dir / "checkpoints"
@@ -116,11 +143,14 @@ def main() -> int:
     run_name = args.run_name or f"{args.model.lower()}_{args.dataset}"
     log_file = log_dir / f"{run_name}.log"
     result_file = result_dir / f"{run_name}.json"
+    # 这些参数覆盖 YAML 中的默认值；模型超参数仍由 YAML 统一管理。
     config_dict: dict[str, Any] = {
-        "data_path": str(data_path),
         "checkpoint_dir": str(checkpoint_dir),
         "gpu_id": str(args.gpu_id),
     }
+    if data_path is not None:
+        # 自定义数据目录应为 <data-path>/<dataset>/<dataset>.inter。
+        config_dict["data_path"] = str(data_path)
     if args.epochs is not None:
         config_dict["epochs"] = args.epochs
     if args.seed is not None:
@@ -129,8 +159,12 @@ def main() -> int:
     try:
         from recbole.quick_start import run_recbole
     except ModuleNotFoundError as exc:
-        raise RuntimeError("当前环境未安装 RecBole，请使用 d2l 环境。") from exc
+        raise RuntimeError(
+            "当前 Python 环境未安装 RecBole，请先在服务器 base 环境安装 recbole。"
+        ) from exc
 
+    # RecBole 会读取 sys.argv 中的 --key=value 配置。清空本脚本的参数，
+    # 防止 --model、--output-dir 等运行器参数被 RecBole 重复解析。
     original_argv = sys.argv[:]
     sys.argv[:] = [sys.argv[0]]
     try:
@@ -140,6 +174,7 @@ def main() -> int:
             ):
                 print(f"model={args.model}, dataset={args.dataset}")
                 print(f"NVIDIA GPU={args.gpu_id}, name={gpu_name}")
+                # RecBole 已封装数据加载、训练、验证和测试的完整流程。
                 result = run_recbole(
                     model=args.model,
                     dataset=args.dataset,
@@ -150,6 +185,7 @@ def main() -> int:
     finally:
         sys.argv[:] = original_argv
 
+    # 仅保存可复现信息及最终指标，不序列化 Dataset/DataLoader 等运行时对象。
     record = {
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
         "model": args.model,
@@ -158,7 +194,7 @@ def main() -> int:
         "config_overrides": config_dict,
         "gpu": {"id": args.gpu_id, "name": gpu_name},
         "saved": not args.no_save,
-        "result": to_jsonable(result),
+        "result": summarize_result(result),
     }
     result_file.write_text(
         json.dumps(record, ensure_ascii=False, indent=2) + "\n", encoding="utf-8"

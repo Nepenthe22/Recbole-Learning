@@ -35,17 +35,7 @@
 
 ## 四、数据集与预处理
 
-实验使用 MovieLens 100K 数据集。数据记录包含用户编号、物品编号、评分和时间戳四个字段，转换后的 RecBole atomic file 表头为：
-
-```text
-user_id:token    item_id:token    rating:float    timestamp:float
-```
-
-数据准备脚本为 `experiments/code/prepare_ml100k.py`，生成文件：
-
-```text
-experiments/data/ml-100k/ml-100k.inter
-```
+实验直接使用 RecBole 内置的 MovieLens 100K（`ml-100k`）示例数据集，无需额外下载或转换 atomic file。数据包含用户编号、物品编号、评分和时间戳字段；LightGCN 加载用户和物品交互，SASRec 额外使用时间戳构建按时间排序的行为序列。
 
 LightGCN 使用随机比例 `8:1:1` 划分训练集、验证集和测试集；SASRec 按时间顺序生成用户行为序列，并使用 leave-one-out 方式保留验证行为和测试行为。
 
@@ -153,7 +143,6 @@ LightGCN 主要利用用户—物品交互图中的结构信息，SASRec 主要�
 ```text
 experiments/
 ├── code/
-│   ├── prepare_ml100k.py
 │   └── run_experiment.py
 ├── config/
 │   ├── lightgcn_ml-100k.yaml

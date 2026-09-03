@@ -8,7 +8,6 @@
 ```text
 experiments/
 ├── code/
-│   ├── prepare_ml100k.py       # 共享：下载并生成 RecBole atomic file
 │   └── run_experiment.py       # 共享：通过 --model 选择模型
 ├── config/
 │   ├── lightgcn_ml-100k.yaml   # LightGCN 配置
@@ -22,15 +21,18 @@ experiments/
 ## AutoDL 运行
 
 ```bash
-conda activate d2l
+# base 为 Python 3.12 时不要直接安装 RecBole；创建兼容的 Python 3.11 环境
+conda create -n recbole python=3.11 -y
+conda activate recbole
+python -m pip install -r experiments/requirements.txt
 nvidia-smi
 
-python experiments/code/prepare_ml100k.py
+# ml-100k 由 RecBole 内置提供，无需额外下载或转换
 python experiments/code/run_experiment.py --model LightGCN --gpu-id 0
 python experiments/code/run_experiment.py --model SASRec --gpu-id 0
 ```
 
-也可以先把数据放到自定义目录，再通过 `--data-path` 指定。运行器默认强制检查 CUDA，避免在 AutoDL 显卡未挂载时误用 CPU。
+运行器默认使用 RecBole 内置的 `ml-100k` 数据集；如使用自定义数据，可通过 `--data-path` 指定父目录。运行器默认强制检查 CUDA，避免在 AutoDL 显卡未挂载时误用 CPU。
 
 结果位置：
 
