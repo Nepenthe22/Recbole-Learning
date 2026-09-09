@@ -1,0 +1,31 @@
+# Local agent and credential state
+/.agents/
+/.codex/
+/AGENTS.md
+/auth.json
+*.pem
+*.key
+
+# Editor and local diagnostics
+/.vscode/
+/debug.log
+
+# Python caches
+__pycache__/
+*.py[cod]
+
+# RecBole default runtime artifacts
+/log/
+/log_tensorboard/
+/saved/
+
+# Local datasets and model artifacts
+/data/
+/datasets/
+/checkpoints/
+/outputs/
+experiments/data/*
+!experiments/data/.gitkeep
+*.pt
+*.pth
+*.ckpt

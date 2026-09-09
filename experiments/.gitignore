@@ -1,8 +1,0 @@
-data/*
-!data/.gitkeep
-outputs/checkpoints/*
-!outputs/checkpoints/.gitkeep
-outputs/logs/*
-!outputs/logs/.gitkeep
-outputs/results/*
-!outputs/results/.gitkeep
