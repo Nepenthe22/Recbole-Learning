@@ -23,7 +23,7 @@ initializer_range: 0.02
 loss_type: CE
 train_neg_sample_args: ~
 epochs: 60
-train_batch_size: 2048
+train_batch_size: 512
 learner: adam
 learning_rate: 0.0005
 
