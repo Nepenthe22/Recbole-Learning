@@ -13,7 +13,7 @@ load_col:
 embedding_size: 64
 hidden_size: 64
 inner_size: 256
-n_layers: 2
+n_layers: 1
 n_heads: 2
 hidden_dropout_prob: 0.2
 attn_dropout_prob: 0.2
@@ -37,7 +37,7 @@ metrics: [Recall, Hit, NDCG, MRR]
 topk: [10, 20]
 valid_metric: NDCG@10
 eval_batch_size: 4096
-stopping_step: 8
+stopping_step: 5
 
 gpu_id: 0
 seed: 2026
