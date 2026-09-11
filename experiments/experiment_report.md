@@ -52,13 +52,13 @@
 | --- | --- |
 | embedding/hidden size | 64 |
 | Transformer 层数 | 2 |
-| attention heads | 4 |
+| attention heads | 2 |
 | 最大序列长度 | 50 |
 | dropout | 0.2 |
 | loss | CE |
-| epoch 上限 | 100 |
-| learning rate | 0.0002 |
-| early stopping step | 20 |
+| epoch 上限 | 60 |
+| learning rate | 0.0005 |
+| early stopping step | 8 |
 | seed | 2026 |
 
 ## 五、实验结果
@@ -91,3 +91,20 @@ python experiments/code/run_experiment.py --model SASRec --gpu-id 0
 ```
 
 原始日志、TensorBoard 文件和 checkpoint 保存在服务器默认运行目录中，不纳入 GitHub 版本控制。
+
+## 八、SASRec 四阶段调参
+
+调参固定使用 `seed=2026`、`stopping_step=8`，以验证集 `NDCG@10` 选择进入下一阶段的配置。测试集指标只用于最终比较，不参与参数选择。
+
+### 8.1 第一阶段：学习率
+
+固定 `n_layers=2`、`n_heads=2`、`hidden_size=64`、`train_batch_size=2048`、dropout `0.2` 和最大序列长度 `50`。
+
+| learning rate | 最佳 epoch | Valid Recall@10 | Valid NDCG@10 | Valid MRR@10 | Valid Recall@20 | Valid NDCG@20 | Valid MRR@20 | Test Recall@10 | Test NDCG@10 | Test MRR@10 | Test Recall@20 | Test NDCG@20 | Test MRR@20 |
+| ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: | ---: |
+| 0.0003 | 19 | 0.1410 | 0.0657 | 0.0431 | 0.2333 | 0.0889 | 0.0494 | 0.1177 | 0.0580 | 0.0399 | 0.1941 | 0.0771 | 0.0450 |
+| **0.0005** | **12** | **0.1485** | **0.0665** | 0.0422 | 0.2248 | 0.0856 | 0.0473 | **0.1273** | **0.0615** | **0.0418** | 0.2004 | 0.0797 | 0.0467 |
+| 0.0007 | 17 | 0.1400 | 0.0634 | 0.0406 | 0.2312 | 0.0863 | 0.0468 | 0.1273 | 0.0559 | 0.0347 | **0.2227** | **0.0798** | 0.0411 |
+| 0.0010 | 5 | 0.1304 | 0.0627 | 0.0423 | 0.2322 | 0.0882 | 0.0491 | 0.1124 | 0.0563 | 0.0391 | 0.1962 | 0.0775 | 0.0450 |
+
+`learning_rate=0.0005` 的验证集 `NDCG@10` 最高，因此作为第二阶段基线。
