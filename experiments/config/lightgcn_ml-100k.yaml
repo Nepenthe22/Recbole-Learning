@@ -10,7 +10,7 @@ epochs: 100
 train_batch_size: 2048
 learner: adam
 learning_rate: 0.0002
-embedding_size: 64
+embedding_size: 128
 n_layers: 1
 reg_weight: 0.0001
 loss_type: BPR
