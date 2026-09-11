@@ -25,6 +25,7 @@ train_neg_sample_args: ~
 epochs: 60
 train_batch_size: 512
 learner: adam
+weight_decay: 0.000001
 learning_rate: 0.0005
 
 eval_args:
