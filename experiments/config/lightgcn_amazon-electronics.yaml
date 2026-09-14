@@ -6,7 +6,7 @@ field_separator: "\t"
 load_col:
   inter: [user_id, item_id, rating, timestamp]
 
-epochs: 100
+epochs: 10
 train_batch_size: 2048
 learner: adam
 learning_rate: 0.0002
@@ -22,17 +22,18 @@ eval_args:
   split: {RS: [8, 1, 1]}
   group_by: user
   order: RO
-  mode: full
+  mode: uni100
 metrics: [Recall, Hit, NDCG, MRR]
 topk: [10, 20]
 valid_metric: NDCG@10
-eval_batch_size: 4096
-stopping_step: 10
+eval_batch_size: 16384
+eval_step: 5
+stopping_step: 2
 
 gpu_id: 0
 seed: 2026
 reproducibility: true
-show_progress: true
+show_progress: false
 save_dataset: false
 save_dataloaders: false
 log_wandb: false

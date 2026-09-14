@@ -22,8 +22,8 @@ layer_norm_eps: 0.000000000001
 initializer_range: 0.02
 loss_type: CE
 train_neg_sample_args: ~
-epochs: 60
-train_batch_size: 512
+epochs: 10
+train_batch_size: 1024
 learner: adam
 weight_decay: 0.000001
 learning_rate: 0.0005
@@ -32,17 +32,18 @@ eval_args:
   split: {LS: valid_and_test}
   group_by: user
   order: TO
-  mode: full
+  mode: uni100
 metrics: [Recall, Hit, NDCG, MRR]
 topk: [10, 20]
 valid_metric: NDCG@10
-eval_batch_size: 4096
-stopping_step: 5
+eval_batch_size: 16384
+eval_step: 5
+stopping_step: 2
 
 gpu_id: 0
 seed: 2026
 reproducibility: true
-show_progress: true
+show_progress: false
 save_dataset: false
 save_dataloaders: false
 log_wandb: false
