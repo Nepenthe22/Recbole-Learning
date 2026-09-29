@@ -4,13 +4,11 @@
 
 | 项目 | 内容 |
 | --- | --- |
-| 实验任务 | RecBole 推荐系统入门实验 |
-| 实验日期 | 2026-09-29 |
-| 训练平台 | AutoDL |
+| 实验任务 | RecBole 实验 |
 | Python | 3.10.8 |
 | PyTorch | 2.1.2+cu118 |
 | RecBole | 1.2.1 |
-| 计算设备 | CUDA GPU |
+| 计算设备 | CUDA GPU 2080Ti |
 
 ## 二、实验目的
 
@@ -89,13 +87,9 @@ SASRec 采用逐阶段调参策略，并始终使用验证集 `NDCG@10` 选择�
 
 LightGCN 在测试集的 Recall、Hit、NDCG 和 MRR 均高于 SASRec，说明在本次 MovieLens 100K 设置下，LightGCN 对目标物品的排序位置更靠前。SASRec 的 `Recall@20` 略高，但由于其 leave-one-out 评估中每名用户只有一个目标物品，因此 Hit 与 Recall 的数值相同。需要注意，两个模型采用不同的数据划分和任务设定，指标不应被视为严格同条件下的模型排名。本实验结果主要用于验证两类推荐模型在 RecBole 中的训练、调参和评估流程。
 
-## 七、结论
+## 七、自定义数据集：Amazon Electronics
 
-本实验完成了 LightGCN 和 SASRec 的端到端训练与评估。LightGCN 使用 RecBole 官方默认模型参数后，测试集 `NDCG@10` 达到 `0.2967`，高于原配置的 `0.1457`；SASRec 通过学习率、batch size、正则化和模型结构的分阶段调参，验证集 `NDCG@10` 从调参前的 `0.0636` 提升到 `0.0700`。本次结果说明，LightGCN 的学习率、图传播层数、正则化强度和训练轮数对 ML-100K 结果影响明显；不同切分协议下的模型指标仍不应直接进行严格横向比较。
-
-## 八、自定义数据集：Amazon Electronics
-
-### 8.1 数据集说明
+### 7.1 数据集说明
 
 本实验进一步使用 Amazon Electronics 评论数据集作为自定义数据集。数据来自 Amazon Electronics 商品评论，采用 5-core 版本，即保留交互次数不少于 5 次的用户和商品，以减少极端稀疏用户/商品对训练的影响。原始评论记录包含用户、商品、评分和时间戳等字段，经过清洗、字段映射和按时间排序后，转换为 RecBole 的 atomic `.inter` 格式。
 
@@ -110,11 +104,11 @@ LightGCN 在测试集的 Recall、Hit、NDCG 和 MRR 均高于 SASRec，说明�
 
 LightGCN 使用 `user_id`、`item_id`、`rating` 和 `timestamp` 字段构建用户—商品图；SASRec 使用 `user_id`、`item_id` 和 `timestamp`，将每名用户的交互按时间升序组织为行为序列。两种模型均在该数据集上完成了训练和评估。
 
-### 8.2 评估设置
+### 7.2 评估设置
 
 两个模型均使用随机种子 `2026`、训练 `10` 个 epoch、`eval_batch_size=16384`、每 5 个 epoch 评估一次，并设置 `stopping_step=2`。评估模式为 `uni100`，即为每个用户采样 100 个负例进行排序评估。因此以下指标是 100 个负例采样下的结果，不等同于对全部商品进行全量排序的结果。
 
-### 8.3 模型参数
+### 7.3 模型参数
 
 | 参数 | LightGCN | SASRec |
 | --- | --- | --- |
@@ -131,7 +125,7 @@ LightGCN 使用 `user_id`、`item_id`、`rating` 和 `timestamp` 字段构建用
 | 数据划分 | RS `[8,1,1]`，RO | LS，TO |
 | 评估模式 | `uni100` | `uni100` |
 
-### 8.4 实验指标
+### 7.4 实验指标
 
 验证集结果如下：
 
@@ -149,11 +143,11 @@ LightGCN 使用 `user_id`、`item_id`、`rating` 和 `timestamp` 字段构建用
 
 在本次 `uni100` 采样评估下，SASRec 的各项指标高于 LightGCN，说明序列模型在该 Amazon Electronics 数据上的短期行为预测中表现较好。但 LightGCN 使用随机划分 `RS/RO`，SASRec 使用按时间划分 `LS/TO`，两者的任务协议并不完全一致，因此该结果主要用于记录自定义数据集上的跑通结果，不能作为严格公平的模型排名结论。
 
-## 九、评价指标说明
+## 八、评价指标说明
 
 本实验主要使用 Recall、Hit、NDCG 和 MRR 衡量推荐结果质量。四个指标都在 Top-K 推荐列表上计算，但关注点不同。
 
-### 9.1 Recall
+### 8.1 Recall
 
 Recall@K 表示用户真实相关物品中，有多少被推荐列表前 K 个位置找回，反映推荐结果对正确答案的覆盖程度。对于每名用户只有一个测试目标的设置，Recall@K 可以理解为目标物品是否出现在前 K 个推荐中；当每名用户存在多个测试目标时，Recall 还反映找回了多少个目标物品。
 
@@ -163,7 +157,7 @@ $$
 \mathrm{Recall@K} = \frac{1}{|U|}\sum_{u\in U}\frac{|R_u\cap P_u^K|}{|R_u|}
 $$
 
-### 9.2 Hit
+### 8.2 Hit
 
 Hit@K 判断前 K 个推荐中是否至少命中一个真实相关物品，再对所有用户取平均，反映有多少用户至少获得了一次有效推荐。Hit 更关注“是否命中”，不区分同一用户命中一个还是多个相关物品。
 
@@ -173,7 +167,7 @@ $$
 \mathrm{Hit@K} = \frac{1}{|U|}\sum_{u\in U}\mathbb{I}\left(R_u\cap P_u^K\neq\varnothing\right)
 $$
 
-### 9.3 NDCG
+### 8.3 NDCG
 
 NDCG@K 不仅关注是否命中，还会根据相关物品在推荐列表中的位置进行折损。正确物品排名越靠前，NDCG 得分越高；如果相关物品排在较后位置，得分会降低。因此 NDCG 更适合衡量整体排序质量。
 
@@ -189,7 +183,7 @@ $$
 \mathrm{NDCG@K}=\frac{1}{|U|}\sum_{u\in U}\frac{\mathrm{DCG@K}(u)}{\mathrm{IDCG@K}(u)}
 $$
 
-### 9.4 MRR
+### 8.4 MRR
 
 MRR@K 取用户在前 K 个推荐中第一个相关物品排名的倒数，再对用户求平均。例如第一个相关物品排在第 1 位时得分为 1，排在第 5 位时得分为 0.2。MRR 主要关注用户看到第一个正确结果需要等待多久。
 
@@ -203,9 +197,9 @@ $$
 
 对于每名用户只有一个测试目标的 leave-one-out 设置，Recall@K 和 Hit@K 在理论上会非常接近，甚至相等；当每名用户存在多个测试目标、采用不同数据划分方式或使用不同指标实现时，两者可能出现差异。
 
-## 十、模型源码
+## 九、模型源码
 
-### 10.1 LightGCN 源码结构与核心流程
+### 9.1 LightGCN 源码结构与核心流程
 
 RecBole 中 LightGCN 位于 `recbole/model/general_recommender/lightgcn.py`，属于一般推荐模型。模型从交互数据中读取用户 ID 和物品 ID，并将用户—物品交互关系构造成二部图。源码首先为用户和物品建立可学习的 embedding，然后通过图传播层在相邻节点之间传递 embedding 信息。
 
@@ -231,7 +225,7 @@ $$
 
 其中，负样本由 RecBole 的采样器产生，正则化项用于限制 embedding 的规模。评估阶段，源码使用用户 embedding 与候选物品 embedding 的矩阵乘法得到所有候选物品分数，再通过 Top-K 排序计算 Recall、Hit、NDCG 和 MRR。
 
-### 10.2 SASRec 源码结构与核心流程
+### 9.2 SASRec 源码结构与核心流程
 
 RecBole 中 SASRec 位于 `recbole/model/sequential_recommender/sasrec.py`，属于序列推荐模型。与 LightGCN 使用全局用户—物品图不同，SASRec 输入的是用户历史交互序列。源码首先根据时间顺序取出用户最近的行为，并截断或补齐到 `MAX_ITEM_LIST_LENGTH`，本实验设置为 50。
 
@@ -247,7 +241,7 @@ $$
 
 本实验的 SASRec 使用交叉熵损失。训练时，模型根据历史序列预测下一个真实交互物品，优化目标物品在候选物品中的概率。与 LightGCN 的 BPR 成对排序损失相比，SASRec 的 CE 损失直接进行分类式预测，因此需要明确序列中的目标位置和 padding mask。源码还会使用 padding mask 忽略补齐位置，避免无效位置影响梯度。
 
-### 10.3 两个模型源码的主要差异
+### 9.3 两个模型源码的主要差异
 
 | 对比项 | LightGCN | SASRec |
 | --- | --- | --- |
