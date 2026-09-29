@@ -202,3 +202,61 @@ $$
 其中，`K` 表示只查看推荐列表的前 K 个结果，例如 `Recall@10` 只考虑前 10 个推荐，`@20` 则考虑前 20 个推荐。通常随着 K 增大，Recall 和 Hit 不会降低，因为更长的推荐列表有更大机会包含真实物品；NDCG 和 MRR 则进一步反映正确物品在列表中的具体位置。
 
 对于每名用户只有一个测试目标的 leave-one-out 设置，Recall@K 和 Hit@K 在理论上会非常接近，甚至相等；当每名用户存在多个测试目标、采用不同数据划分方式或使用不同指标实现时，两者可能出现差异。
+
+## 十、模型源码
+
+### 10.1 LightGCN 源码结构与核心流程
+
+RecBole 中 LightGCN 位于 `recbole/model/general_recommender/lightgcn.py`，属于一般推荐模型。模型从交互数据中读取用户 ID 和物品 ID，并将用户—物品交互关系构造成二部图。源码首先为用户和物品建立可学习的 embedding，然后通过图传播层在相邻节点之间传递 embedding 信息。
+
+LightGCN 的核心特点是只保留 embedding 传播和邻居聚合，不使用特征变换矩阵和非线性激活函数。第 $l+1$ 层的节点表示可以概括为：
+
+$$
+\mathbf{e}^{(l+1)}_v=\sum_{u\in\mathcal{N}(v)}\frac{1}{\sqrt{|\mathcal{N}(v)|}\sqrt{|\mathcal{N}(u)|}}\mathbf{e}^{(l)}_u
+$$
+
+源码中通常将初始 embedding 和各层传播结果保存下来，再进行平均或加权融合，得到最终的用户和物品表示。这样可以同时利用用户自身的协同表示和多跳邻居信息。`n_layers` 决定图传播的层数，层数越大，模型能够利用更远的协同关系，但也可能带来过平滑问题。
+
+训练阶段，LightGCN 使用 BPR 损失。对用户 $u$、正样本物品 $i$ 和负样本物品 $j$，模型先计算用户与物品 embedding 的内积作为偏好分数：
+
+$$
+\hat{y}_{ui}=\mathbf{e}_u^\top\mathbf{e}_i
+$$
+
+然后优化正样本分数高于负样本分数的差值：
+
+$$
+\mathcal{L}_{BPR}=-\sum\log\sigma(\hat{y}_{ui}-\hat{y}_{uj})+\lambda\lVert\Theta\rVert^2
+$$
+
+其中，负样本由 RecBole 的采样器产生，正则化项用于限制 embedding 的规模。评估阶段，源码使用用户 embedding 与候选物品 embedding 的矩阵乘法得到所有候选物品分数，再通过 Top-K 排序计算 Recall、Hit、NDCG 和 MRR。
+
+### 10.2 SASRec 源码结构与核心流程
+
+RecBole 中 SASRec 位于 `recbole/model/sequential_recommender/sasrec.py`，属于序列推荐模型。与 LightGCN 使用全局用户—物品图不同，SASRec 输入的是用户历史交互序列。源码首先根据时间顺序取出用户最近的行为，并截断或补齐到 `MAX_ITEM_LIST_LENGTH`，本实验设置为 50。
+
+每个物品 ID 先经过 item embedding，并加上位置 embedding，以区分不同历史位置。随后，序列表示进入由多头自注意力和前馈网络组成的 Transformer block。因果 attention mask 保证当前位置只能使用当前及之前的行为，不能看到未来物品，从而避免训练时的信息泄漏。模型通过自注意力学习序列中不同物品之间的依赖关系，例如某些商品组合、相邻购买行为和较长期的兴趣变化。
+
+对序列位置 $t$，自注意力的基本计算形式为：
+
+$$
+\mathrm{Attention}(Q,K,V)=\mathrm{softmax}\left(\frac{QK^\top}{\sqrt{d}}+M\right)V
+$$
+
+其中 $M$ 是因果 mask，被遮挡的未来位置不会参与注意力计算。经过 Transformer 层后，源码取目标位置的隐藏状态与候选物品 embedding 进行匹配，得到下一个物品的预测分数。
+
+本实验的 SASRec 使用交叉熵损失。训练时，模型根据历史序列预测下一个真实交互物品，优化目标物品在候选物品中的概率。与 LightGCN 的 BPR 成对排序损失相比，SASRec 的 CE 损失直接进行分类式预测，因此需要明确序列中的目标位置和 padding mask。源码还会使用 padding mask 忽略补齐位置，避免无效位置影响梯度。
+
+### 10.3 两个模型源码的主要差异
+
+| 对比项 | LightGCN | SASRec |
+| --- | --- | --- |
+| 模型类型 | 一般推荐模型 | 序列推荐模型 |
+| 核心输入 | 用户—物品交互图 | 按时间排列的用户行为序列 |
+| 主要建模对象 | 用户与物品的协同关系 | 用户行为的顺序依赖 |
+| 核心结构 | 二部图 embedding 传播 | Transformer 自注意力 |
+| 训练目标 | BPR 成对排序 | CE 下一物品预测 |
+| 关键超参数 | embedding size、`n_layers`、`reg_weight` | hidden size、`n_heads`、`MAX_ITEM_LIST_LENGTH`、dropout |
+| 适合的行为假设 | 用户相似性和物品共现关系稳定 | 近期行为顺序包含较强预测信息 |
+
+从源码执行流程看，LightGCN 的主要计算开销来自图传播和用户—物品分数计算；SASRec 的主要计算开销来自序列 Transformer，尤其是序列长度、attention heads 和 hidden size。两者虽然都最终输出用户对物品的排序分数，但输入组织方式、损失函数和模型假设不同，因此实验比较时需要同时报告数据划分和训练目标。
